@@ -44,14 +44,17 @@ def setup_multinomial_model(label, data):
         classify = label[doc_id]
         m[classify][word_id] += count
 
-    # Every element plus one
+    # Remove stop words
+    stop_word = {12:"of", 23:"and",139:"an",978:"am",297:"at",51:"but",52:"with",33:"to",48:"on",27:"are",29:"the",72:"can",1367:"else",81:"for",301:"he",389:"she",99:"so"}
+    for k in stop_word:
+        m[:, k] = 0.0
     m += 1
+    m[:,0] = 0.0
     s = np.sum(m, axis = 1)
     s_trans = np.transpose([s])
     m = m / s_trans
+    m[:,0] = 1.0
     m = np.log2(m)
-    # Set word 0 to zero
-    m[:,0] = 0
 
     np.save('multinomial.npy', m)
     return m
@@ -66,6 +69,8 @@ def naive_bayes(m, pi, test_data, test_label):
         count = test_data[i][2]
         test_m[doc_id][word_id] += count
 
+    # log(1+f)
+    test_m = np.log2(1+test_m)
     error = 0
     for i in range(1, number_doc_plus_1):
         cur_doc = test_m[i]
