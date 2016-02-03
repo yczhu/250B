@@ -4,6 +4,7 @@ import os
 import mnist
 
 from scipy.stats import multivariate_normal
+from scipy.misc import logsumexp
 
 def shuffle_data(img, label):
     m = len(img)
@@ -43,6 +44,8 @@ def setup_gaussian(list_by_class, i, c=0):
 
 def test(test_img, test_label, m_array, mu_array, sigma_array):
     error = 0
+    abstain = 0
+    thre = 0
     pi_array = np.log(m_array / np.sum(m_array))
     test_n = len(test_label)
     print "Run ", test_n, " Tests"
@@ -53,13 +56,24 @@ def test(test_img, test_label, m_array, mu_array, sigma_array):
         p_x[k] = multivariate_normal.logpdf(test_img_array,
                                          mean=mu_array[k],
                                          cov=sigma_array[k])
-    px_T = p_x.T + pi_array
+    # px_T = p_x.T + pi_array
+    px_T = p_x.T
+    #np.save("p_x.npy", px_T)
     for i in range(test_n):
+        log_sum = logsumexp(px_T[i])
+        py_x = np.exp(px_T[i] - log_sum)
+        print i, py_x
         class_id = np.argmax(px_T[i])
+        print "Predict: ", class_id, "Accurate: ", test_label[i]
+        m = np.sort(px_T[i])
+        if m[9] - m[8] < thre:
+            abstain += 1
+            continue
         if class_id != test_label[i]:
+            #print i
             error += 1
-
-    return error * 100.0 / test_n
+    print "Abstain ", abstain
+    return error * 100.0 / (test_n - abstain)
 
 if __name__ == "__main__":
     class_n = 10
@@ -98,4 +112,4 @@ if __name__ == "__main__":
         #np.save('sigma_array.npy', sigma_array)
 
     err_rate = test(test_img, test_label, m_array, mu_array, sigma_array)
-    print "Error rate: ", err_rate
+    print "Error rate: ", err_rate, " %"
