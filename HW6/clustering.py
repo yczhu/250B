@@ -4,6 +4,7 @@ import numpy as np
 from scipy.cluster.hierarchy import dendrogram, linkage
 from pylab import rcParams
 from matplotlib import pyplot as plt
+from sklearn.decomposition import PCA
 
 N_Animal = 50
 N_Feature = 85
@@ -41,6 +42,21 @@ def dendro(X, arr_label):
               )
     plt.show()
 
+def pca(X, arr_label):
+    rcParams['figure.figsize'] = 20, 10
+    pca = PCA(n_components=2)
+    X_2 = pca.fit_transform(X)
+    #plt.plot(X_2[0:N_Animal, 0], X_2[0:N_Animal, 1], 'o', color='blue',
+    #         label=arr_label)
+    fig, ax = plt.subplots()
+    ax.scatter(X_2[0:N_Animal, 0], X_2[0:N_Animal, 1])
+    for i, txt in enumerate(arr_label):
+            ax.annotate(txt, (X_2[i][0],X_2[i][1]))
+    plt.xlabel('x_1')
+    plt.ylabel('x_2')
+    plt.title('Animals after PCA to 2-d')
+    plt.show()
+
 with open('Animals_with_Attributes/classes.txt', 'r') as f:
     for line in f:
         animal_id, animal_name = line.strip().split()
@@ -55,3 +71,4 @@ with open('Animals_with_Attributes/predicate-matrix-continuous.txt', 'r') as f:
 
 #k_means(m_features, dict_label)
 #dendro(m_features, list_label)
+pca(m_features, list_label)
